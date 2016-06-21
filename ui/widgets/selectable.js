@@ -126,7 +126,7 @@ return $.widget( "ui.selectable", $.ui.mouse, {
 		this.selectees.filter( ".ui-selected" ).each( function() {
 			var selectee = $.data( this, "selectable-item" );
 			selectee.startselected = true;
-			if ( !event.metaKey && !event.ctrlKey ) {
+			if ( !event.metaKey && !event.ctrlKey && !event.shiftKey ) {
 				that._removeClass( selectee.$element, "ui-selected" );
 				selectee.selected = false;
 				that._addClass( selectee.$element, "ui-unselecting" );
@@ -143,14 +143,31 @@ return $.widget( "ui.selectable", $.ui.mouse, {
 			var doSelect,
 				selectee = $.data( this, "selectable-item" );
 			if ( selectee ) {
-				doSelect = ( !event.metaKey && !event.ctrlKey ) ||
+				doSelect = ( !event.metaKey && !event.ctrlKey && !event.shiftKey ) ||
 					!selectee.$element.hasClass( "ui-selected" );
 				that._removeClass( selectee.$element, doSelect ? "ui-unselecting" : "ui-selected" )
 					._addClass( selectee.$element, doSelect ? "ui-selecting" : "ui-unselecting" );
 				selectee.unselecting = !doSelect;
 				selectee.selecting = doSelect;
 				selectee.selected = doSelect;
-
+				
+				if (event.shiftKey) {
+				    var closest = $('.ui-selected');
+				    if ($(closest).parent().index() < $(selectee.element).parent().index()) {
+					startElement = $(closest).parent();
+					endElement = $(selectee.element).parent();
+				    } else {
+					startElement =  $(selectee.element).parent();
+					endElement = $(closest).parent();
+				    }
+				    
+				    startElement.nextUntil(endElement).each(function(index,item){
+					selectee = $(item).find('.ui-selectee');
+					selectee.removeClass(doSelect ? "ui-unselecting" : "ui-selected")
+					selectee.addClass(doSelect ? "ui-selecting" : "ui-unselecting");
+				    });
+				}
+				
 				// selectable (UN)SELECTING callback
 				if ( doSelect ) {
 					that._trigger( "selecting", event, {
